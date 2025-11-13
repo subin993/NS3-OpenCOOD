@@ -1,0 +1,33 @@
+# Python Requirements for V2X Cooperative Perception Pipeline
+
+# Core dependencies
+numpy==1.23.5
+pyyaml>=5.4.1
+pyzmq>=22.0.0
+protobuf==3.20.3
+
+# Point cloud processing
+open3d==0.16.0
+
+# Deep learning (adjust based on your CUDA version)
+torch>=1.13.0
+torchvision>=0.14.0
+
+# OpenCOOD dependencies
+opencv-python>=4.5.0
+matplotlib>=3.3.0
+pillow>=8.0.0
+scikit-learn>=0.24.0
+tensorboard>=2.4.0
+tqdm>=4.60.0
+
+# Sparse convolution (choose based on CUDA version)
+# spconv-cu118  # For CUDA 11.8
+# spconv-cu116  # For CUDA 11.6
+# spconv-cu113  # For CUDA 11.3
+
+# Optional: for visualization
+mayavi>=4.7.0
+
+# Note: ns3-gym should be installed from its source directory
+# pip install /path/to/ns-allinone-3.40/ns-3.40/contrib/opengym/model/
