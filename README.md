@@ -88,7 +88,9 @@ pip install numpy open3d pyyaml pyzmq
 
 ```bash
 cd ~/ns-allinone-3.40/ns-3.40
-./ns3 run 'simple-v2x-sim --sumoTrace=/path/to/ns3_opencood/sumo-traces/highway_7_vehicles_fcd.xml --simTime=120'
+./ns3 run 'simple-v2x-sim \
+    --sumoTrace=/path/to/ns3_opencood/sumo-traces/highway_7_vehicles_fcd.xml \
+    --simTime=120'
 ```
 
 ### 2. Run Data Augmentation Pipeline (Terminal 2)
@@ -96,8 +98,21 @@ cd ~/ns-allinone-3.40/ns-3.40
 ```bash
 cd /path/to/ns3_opencood/python-scripts
 conda activate opencood
+
+# Set environment variables for your setup
+export SOURCE_DATA="/path/to/your/opv2v/source/data"
+export MODEL_DIR="/path/to/your/trained/model"
+export OPENCOOD_DIR="/path/to/OpenCOOD"
+
+# Run the pipeline
 ./ns3_proven_pipeline.sh
 ```
+
+The pipeline will:
+- Connect to NS-3 simulation via OpenGym
+- Augment data based on real-time V2X network telemetry
+- Run OpenCOOD inference with the augmented data
+- Save results and performance metrics
 
 For detailed usage instructions, see [docs/USAGE.md](docs/USAGE.md).
 

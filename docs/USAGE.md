@@ -43,14 +43,33 @@ Open a new terminal:
 ```bash
 cd /path/to/ns3_opencood/python-scripts
 conda activate opencood
+
+# Configure environment variables (modify for your setup)
+export SOURCE_DATA="/path/to/your/opv2v/source/data"
+export VALIDATE_ROOT="/path/to/ns3_opencood/data/validate"
+export MODEL_DIR="/path/to/your/trained/model"
+export OPENCOOD_DIR="/path/to/OpenCOOD"
+export FUSION_METHOD="intermediate"  # or early, late
+
+# Run the pipeline
 ./ns3_proven_pipeline.sh
 ```
+
+**Environment Variables**:
+- `SOURCE_DATA`: Path to source OPV2V data (required)
+- `VALIDATE_ROOT`: Output directory for augmented data (default: `../data/validate`)
+- `MODEL_DIR`: Path to trained model directory (required for inference)
+- `OPENCOOD_DIR`: OpenCOOD installation path (default: `~/OpenCOOD`)
+- `FUSION_METHOD`: Fusion strategy - `intermediate`, `early`, or `late` (default: `intermediate`)
+- `NS3_PORT`: OpenGym port (default: `5555`)
+- `NS3_SIM_TIME`: Simulation duration in seconds (default: `120.0`)
 
 The pipeline automatically performs the following steps:
 1. Verify NS-3 simulation connection
 2. Data augmentation based on NS-3 telemetry
-3. OpenCOOD model inference
-4. Save and analyze results
+3. Backup and update OpenCOOD config
+4. Run model inference with augmented data
+5. Restore config and save results
 
 ## NS-3 Simulation Options
 
@@ -170,16 +189,27 @@ The generated FCD file should have the following format:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<fcd-export>
+<fcd-export xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+            xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/fcd_file.xsd">
     <timestep time="0.00">
-        <vehicle id="veh0" x="100.00" y="50.00" angle="0.00" type="car" speed="20.00"/>
-        <vehicle id="veh1" x="150.00" y="50.00" angle="0.00" type="car" speed="20.00"/>
+        <vehicle id="veh_962" x="10.00" y="49.36" speed="14.38" type="passenger"/>
+        <vehicle id="veh_971" x="30.00" y="51.08" speed="15.86" type="passenger"/>
+        <vehicle id="veh_980" x="50.00" y="47.00" speed="13.80" type="passenger"/>
     </timestep>
     <timestep time="0.10">
-        ...
+        <vehicle id="veh_962" x="11.50" y="49.38" speed="14.41" type="passenger"/>
+        <vehicle id="veh_971" x="31.65" y="51.07" speed="15.83" type="passenger"/>
+        <vehicle id="veh_980" x="51.45" y="47.00" speed="13.79" type="passenger"/>
     </timestep>
 </fcd-export>
 ```
+
+**Important**: The FCD file must include:
+- `vehicle id`: Unique identifier for each vehicle
+- `x`, `y`: Position coordinates (meters)
+- `speed`: Vehicle speed (m/s)
+- `type`: Vehicle type (e.g., "passenger", "car", "truck")
+- `angle` (optional): Vehicle heading angle
 
 #### 3. Use in NS-3
 
@@ -204,6 +234,58 @@ data/source/your_scenario/
 ├── 1/
 │   └── ...
 └── ...
+```
+
+**YAML Metadata Format** (`000000.yaml`):
+```yaml
+lidar_pose: [x, y, z, roll, pitch, yaw]  # Vehicle pose
+vehicles:
+  car1:
+    location: [x, y, z]
+    angle: [roll, pitch, yaw]
+    center: [x, y, z]
+    extent: [length, width, height]
+```
+
+### OpenCOOD Inference Configuration
+
+Before running inference, you need to prepare:
+
+1. **Trained Model**: Download or train a cooperative perception model (e.g., PointPillar, CoBEVT, AttentiveFusion)
+2. **Model Config**: Create/modify the model's `config.yaml`
+
+**Example Config Update** (`config.yaml`):
+```yaml
+# Data paths
+validate_dir: '/path/to/ns3_opencood/data/validate'  # Updated by pipeline
+data_dir: '/path/to/original/opv2v/data'
+
+# Model parameters
+fusion_method: 'intermediate'  # or 'early', 'late'
+model:
+  core_method: pointpillar  # or cobevt, attentive_fusion
+  
+# Inference settings
+wild_setting:
+  async: false
+  async_mode: 'real'
+  async_overhead: 100
+```
+
+The pipeline automatically:
+1. Backs up the original config
+2. Updates `validate_dir` to point to augmented data
+3. Runs OpenCOOD inference
+4. Restores the original config
+
+**Manual Inference** (if not using the pipeline):
+```bash
+conda activate opencood
+cd /path/to/OpenCOOD
+
+python -m opencood.tools.inference \
+    --model_dir /path/to/model \
+    --fusion_method intermediate
 ```
 
 ## Results Analysis

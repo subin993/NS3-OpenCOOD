@@ -1,43 +1,75 @@
 #!/bin/bash
 # NS-3 Guided Proven Data Augmentation + Inference Pipeline
-# 기존 v2x_to_inference_pipeline.sh 구조를 유지하면서
-# proven-good 데이터를 NS-3 텔레메트리로 증강
+# NS3-OpenCOOD Co-Simulation Platform for SNA-HCP
 
 set -e
 
 echo "🚀 NS-3 Guided Proven Data Augmentation + Inference Pipeline"
 echo "============================================================"
 
-# 환경 설정
-source ~/miniconda3/etc/profile.d/conda.sh
-conda activate opencood
+# =============================================================================
+# Configuration - MODIFY THESE PATHS FOR YOUR ENVIRONMENT
+# =============================================================================
 
-# 시작 시간 기록
+# Path to source data (OPV2V format)
+SOURCE_DATA="${SOURCE_DATA:-$HOME/subin/mobility_aware_cooperative_perception/data/opv2v_real_scenarios/arxiv/2021_09_11_00_33_16_temp}"
+
+# Output directory for augmented data
+VALIDATE_ROOT="${VALIDATE_ROOT:-$HOME/subin/mobility_aware_cooperative_perception/data/opv2v_real_scenarios/validate}"
+
+# OpenCOOD installation path
+OPENCOOD_DIR="${OPENCOOD_DIR:-$HOME/subin/OpenCOOD}"
+
+# Model directory (PointPillar CoBEVT or other trained model)
+MODEL_DIR="${MODEL_DIR:-$HOME/subin/mobility_aware_cooperative_perception/models/pretrained/pointpillar_cobevt}"
+
+# Fusion method (intermediate, early, late)
+FUSION_METHOD="${FUSION_METHOD:-intermediate}"
+
+# NS-3 OpenGym port
+NS3_PORT="${NS3_PORT:-5555}"
+
+# Simulation parameters
+NS3_SIM_TIME="${NS3_SIM_TIME:-120.0}"
+NS3_STEP_TIME="${NS3_STEP_TIME:-0.1}"
+LIDAR_NOISE_STD="${LIDAR_NOISE_STD:-0.03}"
+
+# =============================================================================
+
+# Environment setup
+if command -v conda &> /dev/null; then
+    source ~/miniconda3/etc/profile.d/conda.sh 2>/dev/null || source ~/anaconda3/etc/profile.d/conda.sh 2>/dev/null || true
+    conda activate opencood 2>/dev/null || echo "⚠️  Warning: Could not activate opencood conda environment"
+fi
+
+# Start time
 START_TIME=$(date +%s)
-echo "⏰ 파이프라인 시작 시간: $(date)"
+echo "⏰ Pipeline start time: $(date)"
 echo ""
 
 # =============================================================================
-# Step 1: NS-3 시뮬레이션 상태 확인
+# Step 1: Check NS-3 Simulation Status
 # =============================================================================
-echo "📊 Step 1: NS-3 시뮬레이션 상태 확인"
+echo "📊 Step 1: Checking NS-3 Simulation Status"
 echo "=================================="
-cd /home/aibox-kou-a/subin
 
-echo "🔍 NS-3 Simple V2X 시뮬레이션 상태 확인..."
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+echo "🔍 Checking NS-3 Simple V2X simulation status..."
 if pgrep -f "simple-v2x-sim" > /dev/null; then
-    echo "✅ NS-3 Simple V2X 시뮬레이션이 실행 중입니다"
-    echo "   (SUMO trace 사용 여부는 NS-3 로그에서 확인 가능)"
+    echo "✅ NS-3 Simple V2X simulation is running"
+    echo "   (Check NS-3 logs for SUMO trace usage)"
 else
-    echo "❌ NS-3 Simple V2X 시뮬레이션이 실행되지 않았습니다!"
+    echo "❌ NS-3 Simple V2X simulation is not running!"
     echo ""
-    echo "   먼저 다른 터미널에서 NS-3를 실행하세요:"
+    echo "   Please start NS-3 in another terminal first:"
     echo ""
-    echo "   # SUMO trace 사용 (권장):"
-    echo "   cd /home/aibox-kou-a/subin/ns-allinone-3.40/ns-3.40"
-    echo "   ./ns3 run 'simple-v2x-sim --sumoTrace=/home/aibox-kou-a/subin/sumo_traces/highway_7_vehicles_fcd.xml --simTime=120'"
+    echo "   # Using SUMO trace (recommended):"
+    echo "   cd ~/ns-allinone-3.40/ns-3.40"
+    echo "   ./ns3 run 'simple-v2x-sim --sumoTrace=/path/to/ns3_opencood/sumo-traces/highway_7_vehicles_fcd.xml --simTime=120'"
     echo ""
-    echo "   # 또는 Random Walk 사용:"
+    echo "   # Or using Random Walk:"
     echo "   ./ns3 run 'simple-v2x-sim --simTime=120'"
     echo ""
     exit 1
@@ -47,119 +79,152 @@ fi
 # Step 2: NS-3 Guided Proven Data Augmentation
 # =============================================================================
 echo ""
-echo "📊 Step 2: NS-3 Guided Proven Data 증강"
+echo "📊 Step 2: NS-3 Guided Proven Data Augmentation"
 echo "=================================="
 
-SOURCE_DATA="/home/aibox-kou-a/subin/mobility_aware_cooperative_perception/data/opv2v_real_scenarios/arxiv/2021_09_11_00_33_16_temp"
-VALIDATE_ROOT="/home/aibox-kou-a/subin/mobility_aware_cooperative_perception/data/opv2v_real_scenarios/validate"
-SCENARIO_NAME="ns3_proven_$(date +%Y_%m_%d_%H_%M_%S)"
+SCENARIO_NAME="ns3_proven_$(date +%Y%m%d_%H%M%S)"
 
-echo "🔄 NS-3 Guided 증강 실행..."
+# Check if source data exists
+if [ ! -d "$SOURCE_DATA" ]; then
+    echo "❌ Source data not found: $SOURCE_DATA"
+    echo "   Please set SOURCE_DATA environment variable or modify the script"
+    exit 1
+fi
+
+echo "🔄 Running NS-3 Guided Augmentation..."
 echo "   Source (proven data): $SOURCE_DATA"
 echo "   Output: $VALIDATE_ROOT/$SCENARIO_NAME"
+echo "   NS-3 Port: $NS3_PORT"
+echo "   Simulation Time: ${NS3_SIM_TIME}s"
 echo ""
 
-python3 ns3_guided_proven_data_augmentation.py \
+python3 "$SCRIPT_DIR/ns3_guided_proven_data_augmentation.py" \
     --source "$SOURCE_DATA" \
     --output-dir "$VALIDATE_ROOT" \
     --scenario-name "$SCENARIO_NAME" \
-    --ns3-port 5555 \
-    --ns3-sim-time 120.0 \
-    --ns3-step-time 0.1 \
-    --lidar-noise-std 0.03
+    --ns3-port "$NS3_PORT" \
+    --ns3-sim-time "$NS3_SIM_TIME" \
+    --ns3-step-time "$NS3_STEP_TIME" \
+    --lidar-noise-std "$LIDAR_NOISE_STD"
 
 AUG_EXIT_CODE=$?
 
 if [ $AUG_EXIT_CODE -ne 0 ]; then
-    echo "❌ 증강 데이터 생성 실패 (Exit Code: $AUG_EXIT_CODE)"
+    echo "❌ Data augmentation failed (Exit Code: $AUG_EXIT_CODE)"
     exit 1
 fi
 
-echo "✅ NS-3 Guided Proven Data 증강 완료!"
+echo "✅ NS-3 Guided Proven Data Augmentation Complete!"
 V2X_DATA_PATH="$VALIDATE_ROOT/$SCENARIO_NAME"
 
-# 데이터 요약 정보
+# Data summary
 if [ -d "$V2X_DATA_PATH" ]; then
     VEHICLE_COUNT=$(ls -1 "$V2X_DATA_PATH" | grep -E "^[0-9]+$" | wc -l)
-    echo "🚗 생성된 차량 수: $VEHICLE_COUNT"
+    echo "🚗 Generated vehicles: $VEHICLE_COUNT"
     
     FIRST_VEHICLE=$(ls "$V2X_DATA_PATH" | grep -E "^[0-9]+$" | head -n1)
     if [ -d "$V2X_DATA_PATH/$FIRST_VEHICLE" ]; then
         FRAME_COUNT=$(ls -1 "$V2X_DATA_PATH/$FIRST_VEHICLE" | grep "\.yaml$" | wc -l)
-        echo "📸 생성된 프레임 수: $FRAME_COUNT"
+        echo "📸 Generated frames: $FRAME_COUNT"
     fi
 fi
 
 # =============================================================================
-# Step 3: Config 파일 업데이트 및 Inference 실행
+# Step 3: Config Update and Inference Execution
 # =============================================================================
 echo ""
-echo "📊 Step 3: 모델 추론 실행"
+echo "📊 Step 3: Model Inference Execution"
 echo "=================================="
 
-MODEL_DIR="/home/aibox-kou-a/subin/mobility_aware_cooperative_perception/models/pretrained/pointpillar_cobevt"
 CONFIG_PATH="$MODEL_DIR/config.yaml"
 
-# Config 백업
-echo "💾 Config 파일 백업..."
+# Check if model directory exists
+if [ ! -d "$MODEL_DIR" ]; then
+    echo "❌ Model directory not found: $MODEL_DIR"
+    echo "   Please set MODEL_DIR environment variable or modify the script"
+    exit 1
+fi
+
+# Check if OpenCOOD exists
+if [ ! -d "$OPENCOOD_DIR" ]; then
+    echo "❌ OpenCOOD directory not found: $OPENCOOD_DIR"
+    echo "   Please set OPENCOOD_DIR environment variable or install OpenCOOD"
+    exit 1
+fi
+
+# Backup config
+echo "💾 Backing up config file..."
 BACKUP_CONFIG="${CONFIG_PATH}.backup_$(date +%Y%m%d_%H%M%S)"
 cp "$CONFIG_PATH" "$BACKUP_CONFIG"
 echo "   Backup: $BACKUP_CONFIG"
 
-# Validate 경로 업데이트 (OpenCOOD는 validate_dir 아래에서 시나리오를 찾음)
-echo "🔧 Config 파일 업데이트 (validate path)..."
+# Update validate path (OpenCOOD searches for scenarios under validate_dir)
+echo "🔧 Updating config file (validate path)..."
 sed -i "s|validate_dir:.*|validate_dir: '$VALIDATE_ROOT'|g" "$CONFIG_PATH"
 echo "   Validate dir: $VALIDATE_ROOT"
 echo "   Scenario: $SCENARIO_NAME"
 
-echo "🚀 추론 실행..."
-echo "   Model: PointPillar CoBEVT"
+echo "🚀 Running inference..."
+echo "   Model: $(basename $MODEL_DIR)"
 echo "   Model Dir: $MODEL_DIR"
-echo "   Fusion: intermediate"
+echo "   Fusion Method: $FUSION_METHOD"
 echo ""
 
 INFERENCE_LOG="inference_ns3_proven_$(date +%Y%m%d_%H%M%S).log"
+LOG_DIR="$(dirname "$SCRIPT_DIR")/logs"
+mkdir -p "$LOG_DIR"
 
-cd /home/aibox-kou-a/subin/OpenCOOD
+cd "$OPENCOOD_DIR"
 python -m opencood.tools.inference \
     --model_dir "$MODEL_DIR" \
-    --fusion_method intermediate 2>&1 | tee "/home/aibox-kou-a/subin/$INFERENCE_LOG"
+    --fusion_method "$FUSION_METHOD" 2>&1 | tee "$LOG_DIR/$INFERENCE_LOG"
 
 INFERENCE_EXIT_CODE=$?
 
-# Config 복원
+# Restore config
 echo ""
-echo "🔄 Config 파일 복원..."
+echo "🔄 Restoring config file..."
 mv "$BACKUP_CONFIG" "$CONFIG_PATH"
 
 # =============================================================================
-# Step 4: 결과 요약
+# Step 4: Results Summary
 # =============================================================================
 echo ""
 echo "=========================================="
-echo "파이프라인 실행 완료!"
+echo "Pipeline Execution Complete!"
 echo "=========================================="
 
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))
-echo "⏱️  총 실행 시간: ${DURATION}초"
+echo "⏱️  Total execution time: ${DURATION} seconds"
 echo ""
 
 if [ $INFERENCE_EXIT_CODE -eq 0 ]; then
-    echo "✅ 추론 성공!"
+    echo "✅ Inference successful!"
     echo ""
-    echo "📊 결과 파일:"
-    echo "   - 증강 데이터: $V2X_DATA_PATH"
-    echo "   - 추론 로그: /home/aibox-kou-a/subin/$INFERENCE_LOG"
+    echo "📊 Result files:"
+    echo "   - Augmented data: $V2X_DATA_PATH"
+    echo "   - Inference log: $LOG_DIR/$INFERENCE_LOG"
     echo ""
-    echo "📈 성능 확인:"
-    echo "   grep 'AP@' /home/aibox-kou-a/subin/$INFERENCE_LOG"
+    echo "📈 Check performance:"
+    echo "   grep 'AP@' $LOG_DIR/$INFERENCE_LOG"
+    echo ""
+    echo "📁 Data structure:"
+    echo "   ls -lh $V2X_DATA_PATH"
 else
-    echo "❌ 추론 실패 (Exit Code: $INFERENCE_EXIT_CODE)"
-    echo "   로그 확인: /home/aibox-kou-a/subin/$INFERENCE_LOG"
+    echo "❌ Inference failed (Exit Code: $INFERENCE_EXIT_CODE)"
+    echo "   Check log: $LOG_DIR/$INFERENCE_LOG"
     exit 1
 fi
 
 echo ""
-echo "🎉 파이프라인 완료!"
+echo "🎉 Pipeline Complete!"
 echo "=========================================="
+echo ""
+echo "💡 Tip: You can customize paths by setting environment variables:"
+echo "   export SOURCE_DATA=/path/to/your/source/data"
+echo "   export VALIDATE_ROOT=/path/to/output"
+echo "   export MODEL_DIR=/path/to/your/model"
+echo "   export OPENCOOD_DIR=/path/to/OpenCOOD"
+echo "   export FUSION_METHOD=intermediate"
+echo ""
