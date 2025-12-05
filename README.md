@@ -149,7 +149,7 @@ If you use this code in your research, please cite the following paper:
 
 ```bibtex
 @article{snahcp2025,
-  title={SNA-HCP: Semantic and Network-Aware Hierarchical Collaborative Perception},
+  title={Semantic- and Network-Aware Hierarchical Collaborative Perception in Vehicular Networks},
   author={Subin Han, Dusit Niyato, and Sangheon Pack},
   journal={T.B.D.},
   year={2025},
