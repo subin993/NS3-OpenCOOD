@@ -169,7 +169,7 @@ For questions or issues, please contact Subin Han, Korea University, subin993@ko
 
 ## 🙏 Acknowledgments
 
-- NS-3 development team 
-- ns3-gym (OpenGym) development team
-- OpenCOOD development team
-- SUMO development team
+- NS-3 development team (https://www.nsnam.org/documentation/)
+- ns3-gym (OpenGym) development team (https://github.com/tkn-tub/ns3-gym)
+- OpenCOOD development team (https://github.com/DerrickXuNu/OpenCOOD)
+- SUMO development team (https://sumo.dlr.de/docs/)
