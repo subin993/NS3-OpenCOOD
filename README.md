@@ -2,11 +2,11 @@
 
 NS-3 based V2X simulation and cooperative perception data augmentation pipeline
 
-**Repository**: [https://github.com/subin993/SNA-HCP](https://github.com/subin993/SNA-HCP)
+**Repository**: [https://github.com/subin993/SNA-HCP](https://github.com/subin993/NS3-OpenCOOD)
 
 ## 📋 Overview
 
-This project provides the NS3-OpenCOOD co-simulation platform for implementing SNA-HCP (Semantic and Network-Aware Hierarchical Collaborative Perception). The platform simulates V2X (Vehicle-to-Everything) communication environments using the NS-3 network simulator and OpenGym, and augments cooperative perception data based on real-time network telemetry for performance evaluation.
+This project provides the NS3-OpenCOOD co-simulation platform for implementing SNA-HCP (Semantic- and Network-Aware Hierarchical Collaborative Perception). The platform simulates V2X (Vehicle-to-Everything) communication environments using the NS-3 network simulator and OpenGym, and augments cooperative perception data based on real-time network telemetry for performance evaluation.
 
 ## 🏗️ Project Structure
 
@@ -120,7 +120,7 @@ For detailed usage instructions, see [docs/USAGE.md](docs/USAGE.md).
 
 ### 1. NS-3 V2X Simulation
 - SUMO FCD file-based vehicle mobility simulation
-- IEEE 802.11p WAVE communication simulation
+- IEEE 802.11p WAVE (i.e., DSRC) communication simulation
 - Real-time network metrics collection (packet loss rate, latency, etc.)
 
 ### 2. Data Augmentation
@@ -138,9 +138,9 @@ For detailed usage instructions, see [docs/USAGE.md](docs/USAGE.md).
 
 The project includes SUMO traces for various traffic scenarios:
 
-- **highway_7_vehicles_fcd.xml**: Default highway scenario (α=1.0)
-- **experiment_slow_5ms.xml**: Slow congestion scenario (α=0.5)
-- **highway_7_vehicles_ultra_fast.xml**: High-speed scenario (α=1.5)
+- **highway_7_vehicles_fcd.xml**: Default highway scenario
+- **experiment_slow_5ms.xml**: Slow congestion scenario
+- **highway_7_vehicles_ultra_fast.xml**: High-speed scenario
 - **highway_7_vehicles_mixed_extreme.xml**: Extreme mixed scenario
 
 ## 📝 Citation
@@ -150,30 +150,26 @@ If you use this code in your research, please cite the following paper:
 ```bibtex
 @article{snahcp2025,
   title={SNA-HCP: Semantic and Network-Aware Hierarchical Collaborative Perception},
-  author={Your Name and Co-authors},
-  journal={IEEE Transactions on Vehicular Technology},
+  author={Subin Han, Dusit Niyato, and Sangheon Pack},
+  journal={T.B.D.},
   year={2025},
-  note={The implementation and co-simulation environment available at \url{https://github.com/subin993/SNA-HCP}}
+  note={The implementation and co-simulation environment available at \url{https://github.com/subin993/NS3-OpenCOOD}}
 }
 ```
 
-**Note**: For performance evaluation, we implement SNA-HCP within our developed NS3-OpenCOOD co-simulation platform, which can be found at [https://github.com/subin993/SNA-HCP](https://github.com/subin993/SNA-HCP).
+**Note**: For performance evaluation, we implement SNA-HCP within our developed NS3-OpenCOOD co-simulation platform, which can be found at [https://github.com/subin993/NS3-OpenCOOD](https://github.com/subin993/NS3-OpenCOOD).
 
 ## 📄 License
 
 This project follows the MIT License. See the LICENSE file for details.
 
-## 🤝 Contributing
-
-Bug reports, feature suggestions, and Pull Requests are welcome!
-
 ## 📧 Contact
 
-For questions or issues, please create an Issue.
+For questions or issues, please contact Subin Han, Korea University, subin993@korea.ac.kr
 
 ## 🙏 Acknowledgments
 
-- NS-3 development team
+- NS-3 development team 
 - ns3-gym (OpenGym) development team
 - OpenCOOD development team
 - SUMO development team
