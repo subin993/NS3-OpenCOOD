@@ -160,3 +160,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Model files are tracked by Git LFS (see .gitattributes)
+# Large files handled by Git LFS
