@@ -54,6 +54,29 @@ ns3_opencood/
 
 For detailed installation instructions, see [INSTALL.md](INSTALL.md).
 
+### OPV2V Dataset Download
+
+All the OPV2V data can be downloaded from [UCLA BOX](https://ucla.app.box.com/v/UCLA-MobilityLab-OPV2V). 
+
+**Download Options:**
+- **Direct download**: Download the complete large zip file such as `train.zip` if you have good internet connectivity
+- **Chunked download**: If you have issues with large files, use the chunked versions in directories ending with `_chunks` (e.g., `train_chunks`)
+
+**After downloading chunked files**, merge them using:
+```bash
+cat train.zip.part* > train.zip
+unzip train.zip
+```
+
+Place the downloaded OPV2V data in the `data/source/` directory:
+```bash
+# Example structure
+data/source/
+├── train/
+├── validate/
+└── test/
+```
+
 ### Quick Installation Summary
 
 ```bash
